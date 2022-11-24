@@ -2,9 +2,9 @@
 name: publish-global-state-update-gen
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    branches:
+      dev
 
 jobs:
   publish_deb:
@@ -30,40 +30,8 @@ jobs:
           sudo apt-get install -y awscli aptly=1.2.0
           aptly config show
 
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@c8bb57c57e8df1be8c73ff3d59deab1dbc00e0d1 #v5.1.0
-        with:
-          gpg_private_key: ${{ secrets.APTLY_GPG_KEY }}
-          passphrase: ${{ secrets.APTLY_GPG_PASS }}
-
       - name: Install cargo deb
         run: cargo install cargo-deb
 
       - name: Cargo build
         run: cargo build -p global-state-update-gen --release
-
-      - name: Cargo deb
-        run: cargo deb -p global-state-update-gen --no-build --variant ${{ matrix.code_name }}
-
-      - name: Upload binaries to repo
-        env:
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.APTLY_SECRET_KEY }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.APTLY_ACCESS_KEY }}
-          PLUGIN_REPO_NAME: ${{ secrets.APTLY_REPO }}
-          PLUGIN_REGION: ${{ secrets.APTLY_REGION }}
-          PLUGIN_GPG_KEY: ${{ secrets.APTLY_GPG_KEY }}
-          PLUGIN_GPG_PASS: ${{ secrets.APTLY_GPG_PASS }}
-          PLUGIN_ACL: 'public-read'
-          PLUGIN_PREFIX: 'releases'
-          PLUGIN_DEB_PATH: './target/debian'
-          PLUGIN_OS_CODENAME: ${{ matrix.code_name }}
-        run: ./ci/publish_deb_to_repo.sh
-
-      - name: Invalidate cloudfront
-        uses: chetan/invalidate-cloudfront-action@c384d5f09592318a77b1e5c0c8d4772317e48b25 #v2.4
-        env:
-          DISTRIBUTION: ${{ secrets.APTLY_DIST_ID }}
-          PATHS: "/*"
-          AWS_REGION: ${{ secrets.APTLY_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.APTLY_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.APTLY_SECRET_KEY }}
