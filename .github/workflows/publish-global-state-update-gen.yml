@@ -38,5 +38,5 @@ jobs:
         
       - uses: actions/upload-artifact@v3
         with:
-          name: casper-node
-          path: target/debian/casper-node
+          name: global-state-update-gen
+          path: target/release/global-state-update-gen
