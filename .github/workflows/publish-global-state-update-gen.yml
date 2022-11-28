@@ -35,3 +35,8 @@ jobs:
 
       - name: Cargo build
         run: cargo build -p global-state-update-gen --release
+        
+      - uses: actions/upload-artifact@v3
+        with:
+          name: casper-node
+          path: target/release/casper-node
